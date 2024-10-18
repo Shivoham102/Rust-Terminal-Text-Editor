@@ -1,5 +1,6 @@
+use crossterm::event::KeyCode;
 use crossterm::execute;
-use crossterm::cursor::{Hide, MoveTo, Show};
+use crossterm::cursor::{Hide, MoveDown, MoveLeft, MoveRight, MoveTo, MoveToColumn, MoveToRow, MoveUp, Show};
 use crossterm::queue;
 use crossterm::style::Print;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType};
@@ -35,6 +36,36 @@ impl Terminal {
     }
     pub fn move_cursor_to(position: Position) -> Result<(), std::io::Error> {
         execute!(stdout(), MoveTo(position.x, position.y))?;
+        Ok(())
+    }
+    pub fn move_cursor(action: KeyCode) -> Result<(), std::io::Error> {
+        match action {
+            KeyCode::Left => {
+                execute!(stdout(), MoveLeft(1))?;
+            }
+            KeyCode::Right => {
+                execute!(stdout(), MoveRight(1))?;
+            }
+            KeyCode::Up => {
+                execute!(stdout(), MoveUp(1))?;
+            }
+            KeyCode::Down => {
+                execute!(stdout(), MoveDown(1))?;
+            }
+            KeyCode::Home => {
+                execute!(stdout(), MoveToColumn(0))?;
+            }
+            KeyCode::End => {
+                execute!(stdout(), MoveToColumn(Terminal::size()?.width))?;
+            }
+            KeyCode::PageUp => {
+                execute!(stdout(), MoveToRow(0))?;
+            }
+            KeyCode::PageDown => {
+                execute!(stdout(), MoveToRow(Terminal::size()?.height))?;
+            }
+            _ => ()
+        }
         Ok(())
     }
     pub fn size() -> Result<Size, std::io::Error> {

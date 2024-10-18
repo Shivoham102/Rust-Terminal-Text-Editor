@@ -1,15 +1,22 @@
-use crossterm::event::{read, Event, Event::Key, KeyCode::Char, KeyEvent, KeyModifiers};
+use crossterm::event::{read, Event::{self, Key}, KeyCode::{self}, KeyEvent, KeyEventKind, KeyModifiers};
 mod terminal;
-use terminal::{Position, Terminal};
+use terminal::Terminal;
+mod view;
+use view::View;
 
+#[derive(Default)]
 pub struct Editor {
     should_quit: bool,
+    view: View
 }
 
 impl Editor {
-    pub const fn default() -> Self {
-        Self { should_quit: false }
-    }
+    // pub const fn default() -> Self {
+    //     Self { 
+    //         should_quit: false,
+    //         view: View,            
+    //     }
+    // }
     pub fn run(&mut self) {
         Terminal::initialize().unwrap();
         let result = self.repl();
@@ -18,8 +25,8 @@ impl Editor {
     }
 
     fn repl(&mut self) -> Result<(), std::io::Error> {
-        loop {
-            self.refresh_screen()?;
+        self.refresh_screen()?;
+        loop {            
             if self.should_quit {
                 break;
             }
@@ -30,14 +37,22 @@ impl Editor {
     }
     fn evaluate_event(&mut self, event: &Event) {
         if let Key(KeyEvent {
-            code, modifiers, ..
+            code, modifiers, kind: KeyEventKind::Press, ..
         }) = event
         {
-            match code {
-                Char('q') if *modifiers == KeyModifiers::CONTROL => {
-                    self.should_quit = true;
+            // println!("{}", code);
+            match code {       
+                KeyCode::Char(c) => {
+                    if *c == 'q' && *modifiers == KeyModifiers::CONTROL {
+                        self.should_quit = true;
+                    } else {
+                        //
+                    }
                 }
-                _ => (),
+                
+                _ => {
+                    let _ = Terminal::move_cursor(*code);
+                },
             }
         }
     }
@@ -47,30 +62,13 @@ impl Editor {
             Terminal::clear_screen()?;
             Terminal::print("Goodbye.\r\n")?;
         } else {
-            Self::draw_rows()?;
-            Terminal::move_cursor_to(Position {x: 0, y: 0})?;
+            self.view.render()?;
+           
         }
         Terminal::show_cursor()?;
         Terminal::execute()?;
         Ok(())
     }
-    fn draw_rows() -> Result<(), std::io::Error> {
-        let height = Terminal::size()?.height;
-        let width = Terminal::size()?.width;
-        for current_row in 0..height {
-            Terminal::clear_line()?;            
-            Terminal::print("~")?;
-            let welcome_msg = "Welcome to the Terminal Text Editor";
-            let length = welcome_msg.len();
-            if current_row == height/3 {
-                Terminal::move_cursor_to(Position {x: width/2 - (length as u16/2), y: current_row})?;
-                Terminal::print(&welcome_msg)?;
-            }
-
-            if current_row + 1 < height {
-                Terminal::print("\r\n")?;
-            }
-        }
-        Ok(())
-    }
+    
+    
 }
