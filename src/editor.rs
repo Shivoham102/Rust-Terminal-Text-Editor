@@ -1,3 +1,5 @@
+use std::env;
+
 use crossterm::event::{read, Event::{self, Key}, KeyCode::{self}, KeyEvent, KeyEventKind, KeyModifiers};
 mod terminal;
 use terminal::Terminal;
@@ -11,17 +13,20 @@ pub struct Editor {
 }
 
 impl Editor {
-    // pub const fn default() -> Self {
-    //     Self { 
-    //         should_quit: false,
-    //         view: View,            
-    //     }
-    // }
+
     pub fn run(&mut self) {
         Terminal::initialize().unwrap();
+        self.handle_args();
         let result = self.repl();
         Terminal::terminate().unwrap();
         result.unwrap();
+    }
+
+    fn handle_args(&mut self) {
+        let args: Vec<String> = env::args().collect();
+        if let Some(filename) = args.get(1) {
+            self.view.load_file(filename);
+        }
     }
 
     fn repl(&mut self) -> Result<(), std::io::Error> {

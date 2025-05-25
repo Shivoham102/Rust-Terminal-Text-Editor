@@ -1,0 +1,7 @@
+Hi!! This is a test file 
+
+for the Terminal Text Editor
+
+Made in Rust.
+
+Hope it works.
